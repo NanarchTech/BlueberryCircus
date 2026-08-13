@@ -28,6 +28,7 @@ jobs:
           python examples/demo_vacuum_covariance.py
           python examples/demo_rectification.py
           python examples/demo_hydrogen_coulomb.py
+          python examples/demo_hypothesis_tournament.py
       - name: certificate bundles round-trip, and tampering is rejected
         run: |
           python - <<'PY'
@@ -61,7 +62,7 @@ jobs:
       - run: pip install .
       - run: |
           cd /tmp
-          python -c "import blueberry_circus as bc; print(bc.__version__); from blueberry_circus import oracles, symplectic, certify"
+          python -c "import blueberry_circus as bc; assert bc.__version__ == '0.3.0'; from blueberry_circus import oracles, symplectic, certify, tournament"
       # A directory named nanarch_certify on sys.path must not shadow the
       # vendored, SHA-pinned certificate layer.
       - run: |

@@ -5,6 +5,9 @@ __pycache__/
 build/
 dist/
 examples/out/
+tournament-*.json
+tournament-*.npz
+tournament-summary.json
 rust/**/target/
 src/*.egg-info/
 target/

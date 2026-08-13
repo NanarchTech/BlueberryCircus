@@ -20,6 +20,8 @@ python3 examples/demo_sho_ground_state.py     # -> out/sho_ground_state_certific
 python3 examples/demo_vacuum_covariance.py    # -> out/vacuum_covariance_certificate.json
 python3 examples/demo_rectification.py         # -> out/rectification_certificate.json
 python3 examples/demo_hydrogen_coulomb.py     # -> out/hydrogen_certificate.json, out/hydrogen_radial.npz
+python3 examples/demo_hypothesis_tournament.py # -> out/hypothesis_tournament_smoke.json
+blueberry-tournament --profile preregistered --arm all # manifest only; no computation
 ```
 
 Tests set `pythonpath = ["src"]` via `pyproject.toml`; `conftest.py` and the
@@ -29,7 +31,7 @@ without installation.
 ## Verified result (2026-08-13, macOS workstation: CPython 3.14.2)
 
 ```
-pytest             112 passed, 2 xfailed, 0 skipped    (core, default)
+pytest             134 passed, 2 xfailed, 0 skipped    (core, default)
 pytest -m rust       4 passed                          (Rust cdylib built)
 pytest -m jax        4 passed                          (JAX installed)
 pytest -m verify     3 skipped                         (no BLUEBERRY_VERIFY_BIN on this run)
@@ -53,6 +55,9 @@ pytest -m verify     3 skipped                         (no BLUEBERRY_VERIFY_BIN 
 | Puthoff circular `P_abs` vs `P_rad` | **<1×10⁻¹²** | analytic balance |
 | Nieuwenhuizen improper quadrature vs `16/(5π√3)` | **9.5×10⁻¹³ absolute** | Eq. (2.30) vs Eq. (2.31) |
 | Setterfield `U=1` vs `U=4` mapped trajectory | **<1×10⁻⁹** | static conjugacy |
+| full point-charge surface | **18 finite cells** plus both analytic endpoints | Nieuwenhuizen Eq. (2.34) |
+| inverse-square printed-kernel maximum | **`Hmax≈7.327`, `dc≈-53.69`** | transformed quadrature, orders 48/64 |
+| tournament random-phase convergence | **32 stored seeds; 2,048→4,096 modes** | normalized change `<10%` or `NULL` |
 
 ## Caveats (house honesty policy)
 
@@ -66,3 +71,11 @@ pytest -m verify     3 skipped                         (no BLUEBERRY_VERIFY_BIN 
   ensemble averaging over seeds and longer integration. The *linear
   ground state itself* is nonetheless certified exactly via the quadrature oracle
   (C2), which needs no time integration.
+- Tournament JSON is deterministic and authoritative: it stores the complete
+  config, seeds, resolutions, confidence intervals, and ledgers. Optional NPZ
+  arrays are redundant. A full run must be requested explicitly with
+  `blueberry-tournament --profile preregistered ... --execute`; ordinary CI
+  executes only the reduced schema/ledger smoke.
+- The tournament's stochastic layer samples the perturbative quadratic response
+  kernel. It is not a long-time nonlinear trajectory and cannot be cited as a
+  reproduction of physical hydrogen self-ionization or stabilization.

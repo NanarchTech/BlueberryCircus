@@ -6,7 +6,7 @@
 
 [![test](https://github.com/NanarchTech/BlueberryCircus/actions/workflows/test.yml/badge.svg)](https://github.com/NanarchTech/BlueberryCircus/actions/workflows/test.yml)
 ![status](https://img.shields.io/badge/status-simulation--first%20prototype-1f6feb)
-![tests](https://img.shields.io/badge/tests-112%20core%20passed%20·%202%20xfail%20·%200%20skip-2ea043)
+![tests](https://img.shields.io/badge/tests-134%20core%20passed%20·%202%20xfail%20·%200%20skip-2ea043)
 ![python](https://img.shields.io/badge/python-3.10%2B-1f6feb)
 ![backends](https://img.shields.io/badge/backends-numpy%20·%20rust%20·%20jax-d29922)
 ![deps](https://img.shields.io/badge/runtime%20deps-numpy%20only-2ea043)
@@ -17,6 +17,13 @@
 ---
 
 BlueberryCircus is a Python laboratory for testing stochastic electrodynamics, not a proof that classical vacuum noise reproduces hydrogen. Its linear oscillator remains an exact benchmark, while its Coulomb sector evaluates three narrower claims: Puthoff’s circular-orbit absorption and radiation balance, Nieuwenhuizen’s near-ionization rectification threshold \(L_c=16/(5\pi\sqrt3)\), and Setterfield’s proposed static vacuum co-scaling, which leaves dimensionless hydrogen dynamics unchanged after time rescaling. The v0.1.0 escape run is retained only as an accelerated numerical stress test because its damping ratio is about 13,000 times the physical Bohr-unit value and it unbinds in less than one tenth of an orbit, so it cannot stand as a reproduction of physical hydrogen self-ionization; certificates verify numerical claims under explicit assumptions, not the truth of SED itself.
+
+Version 0.3.0 adds an energy-audited hypothesis tournament. It computes the
+complete point-charge `D(E,L)` surface before testing a driven Setterfield map,
+a reciprocal finite shell, an inverse-square control, and a conservative
+multipole-storage surrogate. Its finite-mode statistics validate the
+perturbative response kernel, not a nonlinear long-time trajectory. See the
+[tournament specification](docs/tournament.md).
 
 Artifact label: simulation-repo
 
@@ -30,6 +37,10 @@ Artifact label: simulation-repo
 - Analytic oracles: Bohr radius, ground-state energy, angular momentum, oscillator variance
 - Physical Bohr units and an independently integrated near-ionization threshold
 - Static Setterfield co-scaling map with a trajectory-conjugacy regression test
+- Complete point-charge drift surface with perihelion-adapted quadrature
+- Seven-channel energy ledgers and a closed five-state classification vocabulary
+- Four preregistered hypothesis arms with exact zero-parameter recovery controls
+- Chunkable 32-seed/2,048-mode research command with deterministic JSON/NPZ output
 - Phase-space covariance with symplectic readout
 - Seeded ensemble runs for power balance
 - Cole–Zou moving spectral window
@@ -92,6 +103,9 @@ print(o.hydrogen_ground_state_energy(bc.SI) / bc.E_CHARGE)  # -13.605693 (eV)
 | **Rectification threshold** | $L_c=$ **0.5880841551** | independent improper quadrature vs $16/(5\pi\sqrt3)$ | `residual_le_tol` |
 | Critical perihelion | $r_p=$ **0.172921 $a_0$** | $L_c^2/2$ near-ionization asymptote | — |
 | Setterfield static co-scaling | trajectory conjugacy **<10⁻⁹** | $x_U(Ut)=x_1(t)$ and mapped velocities | regression |
+| Point-charge drift surface | **18 preregistered cells** | full Eq. (2.34), both endpoint limits | regression |
+| Inverse-square defining maximum | $H_{\max}=$ **7.327** at $\mu\approx0.590$ | printed kernel gives $d_c\approx-53.69$, not prose −35.8 | quadrature |
+| Multipole closed Hamiltonian | relative total-energy error **<10⁻⁶** | no ZPF or damping | conservation |
 | **Orbit conservation** (no radiation) | $\Delta E/E \sim 10^{-14}$ | exact | `residual_le_tol` |
 | **numpy ↔ Rust agreement** | spring case **bit-identical**, orbit 7×10⁻¹⁴ | — | — |
 | **Independent recheck** | Rust re-derives the verdicts | rejects tampered bundles | separate stack |
@@ -122,7 +136,6 @@ Operation (| apply)  ─▶  Program.compile()  ─▶  Backend  ─▶  Result
 | | check | passes if | tier |
 |---|---|---|---|
 | **O0** | field statistics | discrete → continuum, rel-err < 5% | A |
-| **O1** | Puthoff circular-orbit power balance | $P_{\rm abs}=P_{\rm rad}$ and $m\omega_0r_0^2=\hbar$ | A |
 | **O2** | **spring variance, the gate** | $\langle x^2\rangle=\hbar/2m\omega_0$ to ~1% | A |
 | **O3** | hydrogen radial density | → $4r^2e^{-2r}$ (CPU-day ensembles) | B · `xfail` |
 | **O4** | phase-space conjecture | N–L §3 (NULL where the dynamics don't reach) | B |
@@ -135,6 +148,9 @@ O2 remains the normalization gate: if the simulated field does not give $\hbar/2
 - The published long-duration 3-D studies report self-ionization, including later relativistic and renormalized-noise attempts. BlueberryCircus does not claim to reproduce those physical timescales with its accelerated fixture.
 - Nieuwenhuizen rectification is a conditional drift in energy space. It does not establish equilibrium vacuum-energy extraction, usable net work, or evasion of detailed balance; broken symmetry alone is insufficient.
 - Setterfield co-scaling is represented as a speculative static hypothesis. Its invariants and trajectory conjugacy show that the static profile is dynamically inert after time reparameterization.
+- A time-dependent Setterfield profile is an externally driven variable-mass Hamiltonian; any apparent suppression with nonzero parameter work is classified `ACTIVE_CONTROL`.
+- The finite-shell and multipole arms are response/surrogate models. They are not validated electron or proton structure models. The stochastic tournament is perturbative and does not replace a physical-timescale nonlinear ensemble.
+- Direct quadrature of Nieuwenhuizen's printed inverse-square kernel gives $d_c\approx-53.69$, while the paper's prose quotes −35.8 from its endpoint. Both are retained explicitly; neither establishes a physical inverse-square force.
 - Matching the quantum 1s density remains a CPU-day frontier, marked strict-`xfail` rather than faked.
 - **The orbit is chaotic.** The code is deterministic and byte-reproducible on a fixed machine, but quantities like `r_max` depend on floating-point summation order and shift across machines. The certified quantities, meaning the conservation laws and the tolerance-gated checks, are stable. Raw chaotic outputs are not, and shouldn't be quoted as if they were.
 - Non-relativistic, with dipole and point-charge approximations and a finite, band-limited background field. Each run is faithful only out to bounded times.
@@ -151,13 +167,14 @@ Framework and code © Joe Pecoraro / Nanarch Technologies, Inc., Apache-2.0. The
 - B. Setterfield, *ZPE and Atomic Constants’ Behavior*, [behaviorzpe3.html](https://www.barrysetterfield.org/behaviorzpe3.html) (speculative scaling proposal, tested here as a hypothesis only).
 - T. M. Nieuwenhuizen, *Stochastic Electrodynamics: Renormalized Noise in the Hydrogen Ground-State Problem*, **Front. Phys. 8, 335 (2020)**, [doi:10.3389/fphy.2020.00335](https://doi.org/10.3389/fphy.2020.00335).
 - G. Moddel & O. Dmitriyeva, *Extraction of Zero-Point Energy from the Vacuum*, [arXiv:0910.5893](https://arxiv.org/abs/0910.5893) (equilibrium/detailed-balance assessment).
+- J. A. E. Rodríguez, extended-charge motivation, [arXiv:1201.6168](https://arxiv.org/abs/1201.6168) (the implemented multipole oscillator is a clearly labeled surrogate).
 
 The certificate layer is vendored inside the package (`blueberry_circus/_vendor/nanarch_certify`, a near-verbatim mirror of Nanarch's canonical copy), so `import blueberry_circus` works from a fresh checkout. See [`PROVENANCE.md`](PROVENANCE.md) and [`NOTICE`](NOTICE).
 
 ## Run it
 
 ```bash
-pytest                                     # core suite: 112 passed, 2 xfailed, 0 skipped
+pytest                                     # core suite: 134 passed, 2 xfailed, 0 skipped
 sh scripts/build_rust.sh && pytest -m rust # optional: Rust backend cross-language tests
 pip install ".[jax]" && pytest -m jax      # optional: JAX backend tests
 pytest -m verify                           # optional: needs BLUEBERRY_VERIFY_BIN
@@ -165,11 +182,13 @@ python examples/demo_sho_ground_state.py   # certified spring ground state
 python examples/demo_vacuum_covariance.py  # full vacuum covariance certificate
 python examples/demo_rectification.py      # certified Puthoff + O5 threshold
 python examples/demo_hydrogen_coulomb.py   # accelerated Coulomb stress fixture
+python examples/demo_hypothesis_tournament.py # reduced schema/ledger smoke
+blueberry-tournament --profile preregistered --arm all # manifest only
 ```
 
 <div align="center">
 
-**[docs/STATUS.md](docs/STATUS.md)** · **[docs/theory.md](docs/theory.md)** · **[docs/comparison.md](docs/comparison.md)**
+**[docs/STATUS.md](docs/STATUS.md)** · **[docs/theory.md](docs/theory.md)** · **[docs/tournament.md](docs/tournament.md)** · **[docs/comparison.md](docs/comparison.md)**
 
 *Nanarch Technologies — Photonic & Quantum Intelligence Systems*
 

@@ -11,7 +11,9 @@ abstract: >-
   provides an isotropic 3-D random-phase ZPF mode sampler, a non-runaway
   Landau-Lifshitz radiation-reaction integrator, a Strawberry-Fields-style
   Program/Engine API, physical Bohr normalization, independently integrated
-  near-ionization rectification, and re-checkable PASS/FAIL/NULL certificates
+  near-ionization rectification, a complete point-charge drift surface, and an
+  energy-audited four-arm hypothesis tournament with reproducible finite-mode
+  confidence intervals. Re-checkable PASS/FAIL/NULL certificates remain
   anchored to the exactly-solvable oscillator oracle <x^2> = hbar/(2 m omega0).
 type: software
 authors:
@@ -24,7 +26,9 @@ keywords:
   - "hydrogen ground state"
   - "radiation reaction"
   - "certified computation"
-version: "0.2.0"
+  - "energy audit"
+  - "hypothesis tournament"
+version: "0.3.0"
 date-released: "2026-08-13"
 license: "Apache-2.0"
 repository-code: "https://github.com/NanarchTech/BlueberryCircus"
