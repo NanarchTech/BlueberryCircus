@@ -1,5 +1,4 @@
-"""3-D Coulomb (hydrogen) engine: runnable at CI scale; the convergent ground
-state is unreachable (and self-ionizes) -- the honest headline."""
+"""3-D accelerated Coulomb stress fixture and deferred physical ensembles."""
 import numpy as np
 import pytest
 
@@ -36,18 +35,11 @@ def test_o3_radial_l1_metric_is_well_defined():
 
 @pytest.mark.xfail(strict=True, reason="O3 convergence frontier: matching the QM "
                    "1s radial density to a tight L1 needs Cole-Zou frequency-"
-                   "windowed CPU-day ensembles, and the orbit self-ionizes at "
-                   "long time anyway (Cole & Zou 2003; Nieuwenhuizen & Liska 2015).")
+                   "windowed CPU-day ensembles; published long simulations "
+                   "self-ionize, but this accelerated fixture does not reproduce "
+                   "their physical timescale (Cole-Zou 2003; N-L 2015).")
 def test_radial_density_converges_to_qm_1s():
     raise NotImplementedError("converged windowed O3 ensemble: CPU-day frontier")
-
-
-@pytest.mark.xfail(strict=True, reason="Headline negative result: full-3-D SED "
-                   "hydrogen does NOT reproduce a stable ground state -- it self-"
-                   "ionizes (Nieuwenhuizen & Liska 2015). Kept red as honest "
-                   "documentation; it can never pass.")
-def test_stable_ground_state_is_unreachable():
-    raise NotImplementedError("stable SED hydrogen ground state: literature-negative")
 
 
 @pytest.mark.xfail(strict=True, reason="Frontier: relativistic corrections "

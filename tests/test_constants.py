@@ -1,6 +1,7 @@
 import math
 import blueberry_circus as bc
 from blueberry_circus.constants import Units, radiation_reaction_time
+from blueberry_circus import oracles
 
 
 def test_fine_structure_and_bohr_radius():
@@ -24,3 +25,23 @@ def test_eps0_is_explicit_in_units():
     u = bc.SI
     assert u.eps0 == bc.EPS0
     assert abs(u.k_e - 1.0 / (4 * math.pi * bc.EPS0)) / u.k_e < 1e-12
+
+
+def test_bohr_units_close_every_hydrogen_identity():
+    """Catches a Bohr factory with any independently mis-normalized constant."""
+    u = Units.bohr()
+    assert u.mass == 1.0
+    assert u.hbar == 1.0
+    assert u.charge == 1.0
+    assert math.isclose(u.c, 1.0 / bc.ALPHA, rel_tol=1e-15)
+    assert math.isclose(u.k_e, 1.0, rel_tol=1e-15)
+
+    a0 = oracles.bohr_radius(u)
+    hartree = u.k_e * u.charge**2 / a0
+    omega_b = hartree / u.hbar
+    beta = math.sqrt(2.0 / 3.0) * bc.ALPHA**1.5
+    assert math.isclose(a0, 1.0, rel_tol=1e-15)
+    assert math.isclose(hartree, 1.0, rel_tol=1e-15)
+    assert math.isclose(omega_b, 1.0, rel_tol=1e-15)
+    assert math.isclose(u.tau, beta**2, rel_tol=1e-12)
+    assert bc.BOHR == u

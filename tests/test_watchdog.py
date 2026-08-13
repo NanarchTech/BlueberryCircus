@@ -1,6 +1,8 @@
-"""O5 self-ionization watchdog (the headline result)."""
+"""Generic unbinding watchdog and the legacy accelerated stress fixture."""
+import math
 import numpy as np
 
+from blueberry_circus import constants
 from blueberry_circus.constants import Units
 from blueberry_circus.dynamics import Particle, integrate
 from blueberry_circus.potentials import Coulomb
@@ -27,16 +29,17 @@ def test_bound_kepler_orbit_is_null_on_ionization():
     assert detail["E_final"] < 0.0    # stays bound
 
 
-def test_sed_hydrogen_self_ionizes():
-    # The headline: 3-D SED hydrogen self-ionizes (Nieuwenhuizen-Liska 2015).
-    # SCALED units: gamma/omega0 = 0.02, five-plus orders of magnitude MORE
-    # damping than the physical electron (~1e-7). This reproduces the effect
-    # in reachable wall-clock; it is not the physical-hydrogen timescale.
+def test_accelerated_coulomb_stress_run_unbinds_in_under_one_tenth_orbit():
+    # This v0.1.0 fixture is an accelerated oscillator/numerical-stress system,
+    # not a reproduction of physical long-time hydrogen self-ionization.
     U = Units.scaled(0.02, 1.0)
     P = Particle(U.charge, U.mass)
     coul = _coulomb(U)
     r0 = 1.0
     vc = np.sqrt(np.linalg.norm(coul.force([r0, 0, 0])) * r0 / U.mass)
+    omega_orbit = vc / r0
+    damping_ratio = U.tau * omega_orbit / constants.BOHR.tau
+    assert 1.3e4 < damping_ratio < 1.4e4
     field = ZPFBackground.isotropic_3d(0.3, 4.0, 150, seed=7, units=U)
     t = np.arange(0, 80, 0.004)
     tr = integrate(field=field, potential=coul, particle=P, t_grid=t,
@@ -44,5 +47,6 @@ def test_sed_hydrogen_self_ionizes():
                    dipole=False)
     t_ion, detail = ionization_time(tr, coul, P)
     assert t_ion is not None and detail["ionized"]
+    assert t_ion * omega_orbit / (2.0 * math.pi) < 0.1
     assert detail["E_final"] > detail["E_initial"]   # energy rose: unbinding
     assert detail["r_max"] > 5.0                      # orbit wandered far out

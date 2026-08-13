@@ -26,6 +26,7 @@ jobs:
         run: |
           python examples/demo_sho_ground_state.py
           python examples/demo_vacuum_covariance.py
+          python examples/demo_rectification.py
           python examples/demo_hydrogen_coulomb.py
       - name: certificate bundles round-trip, and tampering is rejected
         run: |

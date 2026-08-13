@@ -40,8 +40,16 @@ are external literature and are not claimed to originate here:
 - D. C. Cole & Y. Zou, Phys. Lett. A **317**, 14 (2003). Moving-window
   trajectory simulation; short-time radial density.
 - T. M. Nieuwenhuizen & M. T. P. Liska, Found. Phys. **45**, 1190 (2015).
-  Full 3-D simulation; the self-ionization negative result (the headline);
-  continuity correction; relativistic corrections.
+  Published full 3-D long-run self-ionization result; not reproduced here at
+  its physical coupling or timescale.
+- T. M. Nieuwenhuizen, Entropy **18**, 135 (2016), arXiv:1611.10200.
+  Near-ionization drift and the independently integrated `L_c` threshold.
+- T. M. Nieuwenhuizen, Front. Phys. **8**, 335 (2020).
+  Negative assessment of several renormalized-noise schemes.
+- G. Moddel & O. Dmitriyeva, arXiv:0910.5893.
+  Equilibrium, detailed-balance, and conservation-law assessment.
+- B. Setterfield, *ZPE and Atomic Constants' Behavior*. A speculative scaling
+  profile represented as a test hypothesis, not an empirical source of truth.
 
 **Do not conflate** R. W. Boyd (nonlinear optics) with T. H. Boyer (the SED
 theorist). Different people, different fields.

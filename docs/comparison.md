@@ -22,10 +22,11 @@ Newton + Lorentz + radiation reaction.
 | Boyer 1975 | exact oscillator ground state in ZPF | analytic | the certified oracle we anchor to |
 | Puthoff 1987 | Bohr-level power-balance equilibrium | analytic | the ε₀-explicit power accounting |
 | Cole & Zou 2003 | first hydrogen trajectory sim (planar) | bespoke code | library-grade, tested, documented engine |
-| Nieuwenhuizen & Liska 2015 | 3-D + relativistic; self-ionization | bespoke OpenCL/C | reproducible API + assurance certificates |
+| Nieuwenhuizen & Liska 2015 | physical-coupling 3-D long runs; self-ionization | bespoke OpenCL/C | not locally reproduced at that timescale |
+| Nieuwenhuizen 2016 | analytic near-ionization drift and $L_c$ | paper integral | independent quadrature + certificate |
 
-To our knowledge there is **no pip-installable, documented, tested SED hydrogen
-simulator**. EMpy / ElectroMagneticPython (PyPI) is general EM mode-solving, not
-SED trajectory dynamics. BlueberryCircus's contribution is the packaging +
-dimensional discipline (explicit ε₀) + non-runaway integrator + re-checkable
-certificates anchored to the Boyer identity.
+BlueberryCircus's bounded contribution is packaging, dimensional discipline
+(explicit ε₀ and physical Bohr units), a non-runaway integrator, and
+re-checkable certificates anchored to the Boyer identity and Nieuwenhuizen
+threshold. It does not claim a physical-timescale hydrogen simulation merely
+because an accelerated stress trajectory unbinds.

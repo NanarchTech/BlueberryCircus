@@ -9,9 +9,9 @@ guarantee. This is a research prototype maintained alongside other work.
   a `PASS`/`FAIL`/`NULL` certificate re-derivable from its recorded numbers. A
   change that weakens a rule, silences a check, or converts a `FAIL` into a
   skip will not be merged. A skipped mandatory check counts as a failure.
-- **Honest verdicts.** `xfail(strict=True)` markers document results the
-  literature says cannot pass (stable hydrogen) or that need CPU-day compute
-  (O3 convergence). Do not "fix" them by loosening tolerances.
+- **Honest verdicts.** `xfail(strict=True)` markers document unexecuted
+  CPU-day/frontier work, not permanent assertions of literature conclusions.
+  Do not "fix" them by loosening tolerances.
 - **numpy is the trust root.** The Rust and JAX backends must agree with the
   numpy reference under the existing enclosure tests; new backends need the
   same cross-language gate.
@@ -22,7 +22,7 @@ guarantee. This is a research prototype maintained alongside other work.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                      # core suite: must be 89 passed, 3 xfailed, 0 skipped
+pytest                      # core suite: must be 112 passed, 2 xfailed, 0 skipped
 sh scripts/build_rust.sh && pytest -m rust   # if your change touches the integrator
 pip install ".[jax]" && pytest -m jax        # if your change touches backends
 ```

@@ -1,11 +1,9 @@
-"""O5 -- the self-ionization watchdog (the honest headline result).
+"""Finite-window mechanical-unbinding diagnostics.
 
-The reproducible verdict of full-3-D SED hydrogen (Nieuwenhuizen & Liska 2015) is
-that the atom does NOT settle into a stable ground state -- run long enough it
-self-ionizes. This module instruments that: it reports the *ionization time*
-``t_ion`` -- the first time the mechanical energy crosses above a (near-zero)
-unbinding threshold and *stays* above it -- or ``None`` if the orbit remains bound
-over the window (an honest NULL on stability, never a silent "it's stable").
+This module reports the first sustained positive-energy time in any supplied
+trajectory. It does not infer physical long-time hydrogen behavior from an
+accelerated or short numerical fixture, and it is no longer the O5 oracle. O5
+is Nieuwenhuizen's independently integrated rectification threshold.
 """
 from __future__ import annotations
 

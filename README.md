@@ -6,7 +6,7 @@
 
 [![test](https://github.com/NanarchTech/BlueberryCircus/actions/workflows/test.yml/badge.svg)](https://github.com/NanarchTech/BlueberryCircus/actions/workflows/test.yml)
 ![status](https://img.shields.io/badge/status-simulation--first%20prototype-1f6feb)
-![tests](https://img.shields.io/badge/tests-89%20core%20passed%20·%203%20xfail%20·%200%20skip-2ea043)
+![tests](https://img.shields.io/badge/tests-112%20core%20passed%20·%202%20xfail%20·%200%20skip-2ea043)
 ![python](https://img.shields.io/badge/python-3.10%2B-1f6feb)
 ![backends](https://img.shields.io/badge/backends-numpy%20·%20rust%20·%20jax-d29922)
 ![deps](https://img.shields.io/badge/runtime%20deps-numpy%20only-2ea043)
@@ -16,13 +16,9 @@
 
 ---
 
-BlueberryCircus is a Python library for stochastic electrodynamics (SED), the classical theory in which a charged particle obeys ordinary Maxwell electrodynamics while a random background field drives it.
+BlueberryCircus is a Python laboratory for testing stochastic electrodynamics, not a proof that classical vacuum noise reproduces hydrogen. Its linear oscillator remains an exact benchmark, while its Coulomb sector evaluates three narrower claims: Puthoff’s circular-orbit absorption and radiation balance, Nieuwenhuizen’s near-ionization rectification threshold \(L_c=16/(5\pi\sqrt3)\), and Setterfield’s proposed static vacuum co-scaling, which leaves dimensionless hydrogen dynamics unchanged after time rescaling. The v0.1.0 escape run is retained only as an accelerated numerical stress test because its damping ratio is about 13,000 times the physical Bohr-unit value and it unbinds in less than one tenth of an orbit, so it cannot stand as a reproduction of physical hydrogen self-ionization; certificates verify numerical claims under explicit assumptions, not the truth of SED itself.
 
-It is designed to test whether classical stochastic electrodynamics can produce atom-like bound behavior when charged-particle dynamics interact with a randomly fluctuating electromagnetic field.
-
-In the analytically tractable harmonic-oscillator case: the implementation reproduces the quantum ground-state variance to approximately 0.05% under its stated assumptions and numerical checks.
-
-However, in the nonlinear Coulomb model of hydrogen: long-time trajectories eventually exhibit electron escape and self-ionization rather than a stable ground state.
+Artifact label: simulation-repo
 
 ## Features
 
@@ -32,12 +28,14 @@ However, in the nonlinear Coulomb model of hydrogen: long-time trajectories even
 - Landau–Lifshitz radiation reaction
 - numpy, Rust, and JAX backends
 - Analytic oracles: Bohr radius, ground-state energy, angular momentum, oscillator variance
+- Physical Bohr units and an independently integrated near-ionization threshold
+- Static Setterfield co-scaling map with a trajectory-conjugacy regression test
 - Phase-space covariance with symplectic readout
 - Seeded ensemble runs for power balance
 - Cole–Zou moving spectral window
-- Ionization-time detection
+- Generic unbinding-time diagnostics for bounded numerical windows
 - Re-checkable certificates on every reported number
-- SI and scaled unit systems
+- SI and physical Bohr units; accelerated scaled units for oscillator/stress tests
 
 *Results are accompanied by a re-checkable certificate recording its value, reference rule, tolerance, provenance, and verdict.*
 
@@ -89,11 +87,15 @@ print(o.hydrogen_ground_state_energy(bc.SI) / bc.E_CHARGE)  # -13.605693 (eV)
 | **Integrator fidelity** | rel-err **2.2×10⁻³** | analytic transfer function | `residual_le_tol` |
 | **Bohr radius** $a_0$ (closed form in SI) | rel-err **1.2×10⁻⁹** | CODATA-2018 | `residual_le_tol` |
 | Ground-state energy $E_1$ | **−13.605693 eV** | −13.605693 eV | — |
+| Puthoff circular balance $P_{\rm abs}=P_{\rm rad}$ | residual **<10⁻¹²** | circular harmonic approximation | `residual_le_tol` |
 | Ground-state angular momentum | $L/\hbar = $ **1** (algebraic identity, not a measurement) | Bohr / Puthoff | — |
+| **Rectification threshold** | $L_c=$ **0.5880841551** | independent improper quadrature vs $16/(5\pi\sqrt3)$ | `residual_le_tol` |
+| Critical perihelion | $r_p=$ **0.172921 $a_0$** | $L_c^2/2$ near-ionization asymptote | — |
+| Setterfield static co-scaling | trajectory conjugacy **<10⁻⁹** | $x_U(Ut)=x_1(t)$ and mapped velocities | regression |
 | **Orbit conservation** (no radiation) | $\Delta E/E \sim 10^{-14}$ | exact | `residual_le_tol` |
 | **numpy ↔ Rust agreement** | spring case **bit-identical**, orbit 7×10⁻¹⁴ | — | — |
 | **Independent recheck** | Rust re-derives the verdicts | rejects tampered bundles | separate stack |
-| **Escape time** $t_{\rm ion}$ | finite (no bound orbit → `NULL`) | N–L 2015 | report / NULL-first |
+| Accelerated stress unbinding | **0.0696 orbit** at **13,368×** physical damping | v0.1.0 fixture only | diagnostic, not physical |
 
 Only the particle-on-a-spring result is a theorem (Boyer 1975). A certificate says something about *recorded numbers under a recorded rule*. It does not claim physical truth, and it does not claim SED is the correct theory of the atom.
 
@@ -120,17 +122,20 @@ Operation (| apply)  ─▶  Program.compile()  ─▶  Backend  ─▶  Result
 | | check | passes if | tier |
 |---|---|---|---|
 | **O0** | field statistics | discrete → continuum, rel-err < 5% | A |
-| **O1** | Puthoff power balance | reproduces $a_0$, −13.6 eV, $L=\hbar$ | A |
+| **O1** | Puthoff circular-orbit power balance | $P_{\rm abs}=P_{\rm rad}$ and $m\omega_0r_0^2=\hbar$ | A |
 | **O2** | **spring variance, the gate** | $\langle x^2\rangle=\hbar/2m\omega_0$ to ~1% | A |
 | **O3** | hydrogen radial density | → $4r^2e^{-2r}$ (CPU-day ensembles) | B · `xfail` |
 | **O4** | phase-space conjecture | N–L §3 (NULL where the dynamics don't reach) | B |
-| **O5** | **escape time, the headline** | reports a finite $t_{\rm ion}$ | report / NULL-first |
+| **O5** | **near-ionization rectification threshold** | quadrature recovers $L_c$ within $10^{-8}$; drift changes sign there | A |
 
-O2 is the gate: if the simulated field doesn't give $\hbar/2m\omega_0$ for the spring, every hydrogen number downstream is meaningless. O5 is the headline: the atom falls apart, and the library says so.
+O2 remains the normalization gate: if the simulated field does not give $\hbar/2m\omega_0$ for the spring, every Coulomb result downstream is meaningless. O5 is now the primary reproducible Coulomb result: a conditional near-zero-energy drift asymptote, not a stationary distribution.
 
 ## Limitations
 
-- **There is no stable hydrogen ground state here.** At long times the electron escapes (Nieuwenhuizen–Liska 2015). Matching the quantum 1s density is a CPU-day frontier, marked strict-`xfail` rather than faked.
+- The published long-duration 3-D studies report self-ionization, including later relativistic and renormalized-noise attempts. BlueberryCircus does not claim to reproduce those physical timescales with its accelerated fixture.
+- Nieuwenhuizen rectification is a conditional drift in energy space. It does not establish equilibrium vacuum-energy extraction, usable net work, or evasion of detailed balance; broken symmetry alone is insufficient.
+- Setterfield co-scaling is represented as a speculative static hypothesis. Its invariants and trajectory conjugacy show that the static profile is dynamically inert after time reparameterization.
+- Matching the quantum 1s density remains a CPU-day frontier, marked strict-`xfail` rather than faked.
 - **The orbit is chaotic.** The code is deterministic and byte-reproducible on a fixed machine, but quantities like `r_max` depend on floating-point summation order and shift across machines. The certified quantities, meaning the conservation laws and the tolerance-gated checks, are stable. Raw chaotic outputs are not, and shouldn't be quoted as if they were.
 - Non-relativistic, with dipole and point-charge approximations and a finite, band-limited background field. Each run is faithful only out to bounded times.
 
@@ -142,19 +147,24 @@ Framework and code © Joe Pecoraro / Nanarch Technologies, Inc., Apache-2.0. The
 - T. H. Boyer, *Random electrodynamics*, **Phys. Rev. D 11, 790 (1975)**.
 - D. C. Cole & Y. Zou, **Phys. Lett. A 317, 14 (2003)**.
 - T. M. Nieuwenhuizen & M. T. P. Liska, **Found. Phys. 45, 1190 (2015)**.
+- T. M. Nieuwenhuizen, *On the stability of classical orbits of the hydrogen ground state in Stochastic Electrodynamics*, **Entropy 18, 135 (2016)**, [arXiv:1611.10200](https://arxiv.org/abs/1611.10200).
+- B. Setterfield, *ZPE and Atomic Constants’ Behavior*, [behaviorzpe3.html](https://www.barrysetterfield.org/behaviorzpe3.html) (speculative scaling proposal, tested here as a hypothesis only).
+- T. M. Nieuwenhuizen, *Stochastic Electrodynamics: Renormalized Noise in the Hydrogen Ground-State Problem*, **Front. Phys. 8, 335 (2020)**, [doi:10.3389/fphy.2020.00335](https://doi.org/10.3389/fphy.2020.00335).
+- G. Moddel & O. Dmitriyeva, *Extraction of Zero-Point Energy from the Vacuum*, [arXiv:0910.5893](https://arxiv.org/abs/0910.5893) (equilibrium/detailed-balance assessment).
 
 The certificate layer is vendored inside the package (`blueberry_circus/_vendor/nanarch_certify`, a near-verbatim mirror of Nanarch's canonical copy), so `import blueberry_circus` works from a fresh checkout. See [`PROVENANCE.md`](PROVENANCE.md) and [`NOTICE`](NOTICE).
 
 ## Run it
 
 ```bash
-pytest                                     # core suite: 89 passed, 3 xfailed, 0 skipped
+pytest                                     # core suite: 112 passed, 2 xfailed, 0 skipped
 sh scripts/build_rust.sh && pytest -m rust # optional: Rust backend cross-language tests
 pip install ".[jax]" && pytest -m jax      # optional: JAX backend tests
 pytest -m verify                           # optional: needs BLUEBERRY_VERIFY_BIN
 python examples/demo_sho_ground_state.py   # certified spring ground state
 python examples/demo_vacuum_covariance.py  # full vacuum covariance certificate
-python examples/demo_hydrogen_coulomb.py   # orbit · radiative collapse · escape
+python examples/demo_rectification.py      # certified Puthoff + O5 threshold
+python examples/demo_hydrogen_coulomb.py   # accelerated Coulomb stress fixture
 ```
 
 <div align="center">
