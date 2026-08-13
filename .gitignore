@@ -1,0 +1,14 @@
+__pycache__/
+.venv/
+*.egg-info/
+*.pyc
+build/
+dist/
+examples/out/
+rust/**/target/
+src/*.egg-info/
+target/
+.pytest_cache/
+.DS_Store
+*.so
+*.dylib

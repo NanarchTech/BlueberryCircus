@@ -1,0 +1,9 @@
+include LICENSE NOTICE CITATION.cff conftest.py
+include PROVENANCE.md REPRODUCIBILITY.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md
+recursive-include docs *.md *.png *.gif
+recursive-include examples *.py
+recursive-include scripts *.sh
+recursive-include rust *.rs *.toml *.md
+recursive-include tests *.py
+global-exclude __pycache__ *.py[cod] .DS_Store
+prune examples/out

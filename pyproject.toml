@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blueberry-circus"
+version = "0.1.0"
+description = "BlueberryCircus: a classical stochastic-electrodynamics (SED) simulator with re-checkable PASS/FAIL/NULL certificates on every reported number."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Joe Pecoraro", email = "joe.a.pecoraro@gmail.com" }]
+keywords = ["stochastic-electrodynamics", "zero-point-field", "SED", "hydrogen", "physics-simulation"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+# numpy is the ONLY hard runtime dependency: the canonical certificate layer is
+# vendored under blueberry_circus._vendor and ships in the wheel.
+dependencies = ["numpy>=1.23"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.5"]
+jax = ["jax>=0.4"]                 # optional batched-ensemble backend (CPU/GPU)
+dev = ["pytest>=7"]
+all = ["matplotlib>=3.5", "jax>=0.4", "pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/NanarchTech/BlueberryCircus"
+Repository = "https://github.com/NanarchTech/BlueberryCircus"
+Issues = "https://github.com/NanarchTech/BlueberryCircus/issues"
+Documentation = "https://github.com/NanarchTech/BlueberryCircus/tree/main/docs"
+
+# Auto-discovers blueberry_circus, .backends, ._vendor and ._vendor.nanarch_certify
+# (the shipped vendored mirror), so the wheel is self-contained.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+# Default run = core suite only (no optional toolchains, zero skips). Opt in to
+# the optional arms explicitly: `pytest -m rust`, `-m jax`, `-m verify`.
+addopts = "-q -p no:cacheprovider -m 'not rust and not jax and not verify'"
+xfail_strict = true
+markers = [
+    "rust: cross-language tests against the optional Rust cdylib backend",
+    "jax: tests against the optional JAX backend",
+    "verify: cross-language certificate recheck via an external nanarch-verify binary (BLUEBERRY_VERIFY_BIN)",
+]

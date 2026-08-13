@@ -1,0 +1,68 @@
+name: test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # Install the package itself (not just its deps): the wheel must be
+      # self-contained, including the vendored certificate layer.
+      - run: pip install -e ".[dev]"
+      # Default run = core suite. BC_FAIL_ON_SKIP makes a skip a failure
+      # (conftest.py), so this is an enforced zero-skip gate, not a comment.
+      - run: python -m pytest -rs
+        env:
+          BC_FAIL_ON_SKIP: "1"
+      - name: examples
+        run: |
+          python examples/demo_sho_ground_state.py
+          python examples/demo_vacuum_covariance.py
+          python examples/demo_hydrogen_coulomb.py
+      - name: certificate bundles round-trip, and tampering is rejected
+        run: |
+          python - <<'PY'
+          from blueberry_circus.certify import (Certificate, PASS, FAIL,
+                                                save_bundle, load_bundle,
+                                                audit_overclaim, build_chain,
+                                                verify_chain)
+          good = Certificate(kind="demo", claim="residual within tolerance",
+                             method="ci", rule="residual_le_tol",
+                             status=PASS, residual=1e-9, tolerance=1e-6)
+          save_bundle([good], "ci_bundle.json")
+          (rt,) = load_bundle("ci_bundle.json")
+          assert rt.recheck() == PASS and not audit_overclaim(rt)
+          assert verify_chain(build_chain([rt]))
+          # stored verdict disagrees with the recorded numbers -> must be caught
+          bad = Certificate(kind="demo", claim="tampered", method="ci",
+                            rule="residual_le_tol", status=PASS,
+                            residual=1.0, tolerance=1e-6)
+          assert bad.recheck() == FAIL, "tampered certificate re-derived as PASS"
+          assert audit_overclaim(bad), "overclaim audit missed a tampered PASS"
+          print("bundle round-trip + tamper rejection OK")
+          PY
+  import-smoke:
+    # Fresh-environment install + import from a neutral directory: catches
+    # anything that only works from a source checkout.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install .
+      - run: |
+          cd /tmp
+          python -c "import blueberry_circus as bc; print(bc.__version__); from blueberry_circus import oracles, symplectic, certify"
+      # A directory named nanarch_certify on sys.path must not shadow the
+      # vendored, SHA-pinned certificate layer.
+      - run: |
+          cd /tmp && mkdir -p shadow/nanarch_certify
+          PYTHONPATH=/tmp/shadow python -c "import blueberry_circus; print('shadowing resisted')"

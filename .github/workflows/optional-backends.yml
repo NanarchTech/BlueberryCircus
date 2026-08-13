@@ -1,0 +1,30 @@
+name: optional-backends
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  rust:
+    # The cross-language gate. The toolchain is installed here, so a skipped
+    # test means the cdylib did not build and nothing was actually compared --
+    # BC_FAIL_ON_SKIP turns that into a red job instead of a green no-op.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pip install -e ".[dev]"
+      - run: sh scripts/build_rust.sh
+      - run: python -m pytest -m rust -rs
+        env:
+          BC_FAIL_ON_SKIP: "1"
+  jax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[dev,jax]"
+      - run: python -m pytest -m jax -rs
+        env:
+          BC_FAIL_ON_SKIP: "1"

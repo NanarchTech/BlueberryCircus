@@ -1,0 +1,19 @@
+[package]
+name = "blueberry_rs"
+version = "0.1.0"
+edition = "2021"
+description = "BlueberryCircus RK4 + Landau-Lifshitz SED integrator (C-ABI, dependency-free)."
+license = "Apache-2.0"
+
+[lib]
+name = "blueberry_rs"
+crate-type = ["cdylib"]
+
+# Dependency-free by charter: the cross-language hot loop must build with only the
+# Rust toolchain (no crates.io fetch). The Python side calls it via ctypes, so the
+# boundary is pure data (f64 arrays), mirroring the Python<->Rust contract.
+# NumPy remains the reference oracle; this is diffed against it.
+
+[profile.release]
+opt-level = 3
+lto = true
