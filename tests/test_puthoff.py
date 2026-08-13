@@ -1,9 +1,7 @@
-"""O1 -- Puthoff (1987) ground state: measure our SED constants against CODATA.
+"""O1 -- Puthoff's (1987) circular-orbit harmonic approximation.
 
-Puthoff's power balance reproduces the Bohr ground state (a0, -13.6 eV, L=hbar).
-These tests check that BlueberryCircus's SI constants + spectrum reproduce those
-analytic targets. (The *dynamical* SED run self-ionizes -- see test_watchdog;
-O1 is the static target Puthoff's balance lands on, not a stability claim.)
+These tests check the stated absorption/radiation formulas, their Bohr targets,
+and the resulting action condition. They do not test nonlinear stability.
 """
 import numpy as np
 
@@ -37,7 +35,17 @@ def test_ground_state_angular_momentum_is_hbar():
 
 def test_puthoff_balance_diagnostics():
     b = oracles.puthoff_power_balance(SI)
-    assert b["larmor_power"] > 0 and b["rho_zpf_at_omega0"] > 0
+    expected_abs = (SI.charge**2 * SI.hbar * b["omega0"]**3 /
+                    (6.0 * np.pi * SI.eps0 * SI.mass * SI.c**3))
+    expected_rad = (SI.charge**2 * b["a0"]**2 * b["omega0"]**4 /
+                    (6.0 * np.pi * SI.eps0 * SI.c**3))
+    assert np.isclose(b["absorbed_power"], expected_abs, rtol=1e-15)
+    assert np.isclose(b["radiated_power"], expected_rad, rtol=1e-15)
+    assert b["larmor_power"] == b["radiated_power"]
+    assert b["rho_zpf_at_omega0"] > 0
+    assert b["relative_power_residual"] < 1e-12
+    assert np.isclose(b["action_m_omega_r2"], SI.hbar, rtol=1e-12)
+    assert np.isclose(b["action_over_hbar"], 1.0, rtol=1e-12)
     assert np.isclose(b["angular_momentum_over_hbar"], 1.0, rtol=1e-12)
     # orbital frequency at a0 is the Bohr value omega0 = alpha c / a0 = E_h/hbar
     assert np.isclose(b["omega0"], ALPHA * SI.c / oracles.bohr_radius(SI), rtol=1e-6)

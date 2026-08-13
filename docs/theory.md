@@ -61,25 +61,88 @@ against radiation reaction, reproduces the quantum oscillator ground state with
 SI constants to relative error 5×10⁻⁴, and verifies that the time-domain
 integrator reproduces the analytic variance to 2.2×10⁻³, i.e. 0.2% (single mode).
 
-## 5. Hydrogen: status and honesty boundary
+## 5. Coulomb sector: three bounded claims
 
-For the Coulomb potential there is no closed form. With radiation reaction and
-no ZPF, the orbit radiates and collapses. That is the classical catastrophe,
-and BlueberryCircus reproduces it: `r` decreases, energy drops. With the ZPF present,
-the absorbed power balances the radiated power and collapse is arrested; Cole &
-Zou (2003) reported, for a *planar* orbit, a steady-state radial density
-approaching the Schrödinger 1s with no adjustable parameters. Nieuwenhuizen &
-Liska (2015) ran the full 3-D problem with relativistic corrections and reached
-the opposite conclusion: the atom eventually self-ionizes. They discuss cutoffs
-and renormalized noise as candidate repairs; the question is open, not settled.
+### 5.1 Puthoff's circular-orbit approximation
 
-BlueberryCircus v0.1 makes the hydrogen *engine* runnable and reproduces the
-collapse and the ZPF-driven arrest qualitatively (including the known outward
-self-ionization wandering at long times). It does **not** claim a converged QM-1s
-radial density: that requires frequency-windowed sampling and CPU-day ensembles
-and is a compute milestone, marked `xfail(strict=True)` in the test
-suite. The package computes what SED predicts; it does not assert SED is the
-correct theory of the atom.
+Puthoff's 1987 calculation is a circular-orbit, harmonic absorption/radiation
+balance at the level of Bohr theory. BlueberryCircus now evaluates both sides,
+
+    P_abs = e² ħ ω₀³ / (6π ε₀ m c³),
+    P_rad = e² r₀² ω₀⁴ / (6π ε₀ c³).
+
+Their equality is equivalent to `m ω₀ r₀² = ħ`; at the Coulomb circular orbit
+this selects the familiar Bohr targets. It does not establish stability of the
+nonlinear stochastic hydrogen problem. That distinction is load-bearing, not
+semantic. The exact power residual is gated below `1e-12`.
+
+### 5.2 Nieuwenhuizen's near-ionization rectification
+
+For an almost parabolic Kepler orbit, Nieuwenhuizen derives the disorder- and
+period-averaged energy change per revolution
+
+    Δ⟨E⟩ = (3π β²/L⁶) [L_c - L],
+    β = √(2/3) Z α^(3/2),
+    L_c = f(0) = 16/(5π√3) = 0.5880841551… .
+
+The package independently evaluates the nested improper integral defining
+`f(0)` (Eq. 2.30 of [arXiv:1611.10200](https://arxiv.org/abs/1611.10200)) by a
+96×96 transformed Gauss–Legendre rule. It recovers the closed form to better
+than `1e-8`. The critical near-parabolic perihelion is
+`r_p = L_c²/2 = 0.172921… a₀`. Positive drift below `L_c` identifies a
+conditional energy-space channel toward ionization; negative drift above it
+does not by itself imply a stationary ground state.
+
+This rectification is not equilibrium vacuum-energy extraction. A nonzero
+conditional drift, or broken symmetry in one sector, does not establish usable
+cycle-averaged work, defeat detailed balance, or close an energy ledger. Those
+are separate propositions and require separate accounting; see the equilibrium
+assessment in [Moddel and Dmitriyeva, arXiv:0910.5893](https://arxiv.org/abs/0910.5893)
+and Nanarch's rectification framing at [pecoraro.dev](https://www.pecoraro.dev/?post=rectification).
+
+### 5.3 Physical Bohr normalization and the retained stress fixture
+
+The physical atomic-unit factory fixes
+
+    m = ħ = e = a₀ = ω_B = 1,   4π ε₀ = 1,   c = 1/α,
+    τ ω_B = τ = (2/3)α³ = β².
+
+`Units.scaled()` has a different purpose: it deliberately chooses a moderate
+numerical damping and is therefore an accelerated oscillator/stress system.
+In the retained v0.1.0 Coulomb fixture, `τ ω_orbit` is `13,367.7` times the
+physical Bohr value. The trajectory crosses sustained positive mechanical
+energy after `0.06956` orbit. A run that unbinds before one tenth of an orbit at
+four orders of magnitude too much damping cannot reproduce physical long-time
+hydrogen self-ionization.
+
+The published full-3-D [long simulations](https://arxiv.org/abs/1502.06856)
+nevertheless remain important negative evidence: Nieuwenhuizen and Liska's
+runs ionized in all attempted modelings, relativistic corrections did not
+remove that behavior, and the [2020 renormalized-noise study](https://doi.org/10.3389/fphy.2020.00335)
+found no scheme that escaped the prior self-ionization result. These are
+literature results, not outputs that BlueberryCircus claims to have reproduced
+at their physical timescales.
+
+### 5.4 Setterfield static co-scaling is a conjugacy
+
+Setterfield's speculative profile is represented, without empirical
+endorsement, by
+
+    ħ, ε₀ ∝ U,   c ∝ U⁻¹,   e ∝ U^(1/2),   m ∝ U².
+
+Substitution shows that `α`, `a₀`, the Hartree energy `E_h`, `β`, and
+`τ ω_B` are invariant, while `ω_B ∝ U⁻¹`. With identical random phases and the
+frequency band mapped as `ω → ω/U`, the field amplitudes scale as `U⁻¹/²`
+and wavevectors remain fixed. The equations are conjugate under
+
+    x_U(Ut) = x_1(t),   U v_U(Ut) = v_1(t).
+
+The regression test integrates the full Coulomb + ZPF + Landau–Lifshitz system
+at `U=1` and `U=4`, including the magnetic term, and requires position,
+velocity, mechanical energy, and `L/ħ` agreement below `1e-9`. Thus the static
+co-scaling is dynamically inert after time reparameterization. A genuinely
+time-dependent `U(t)` is a different, driven problem whose parameter work must
+be recorded explicitly.
 
 ## 6. The vacuum-covariance certificate
 

@@ -1,14 +1,14 @@
 # BlueberryCircus verification status
 
-v0.1.0. Verified on a macOS workstation (CPython 3.14.2, numpy 2.3.5,
-cargo/rustc 1.91, JAX 0.10.2) on 2026-08-12. Pass counts are
+v0.2.0. Verified on a macOS workstation (CPython 3.14.2; exact dependency and
+tool versions are printed by the release gate) on 2026-08-13. Pass counts are
 environment-specific; reproduce locally before citing them.
 
 ## Suite
 
 | Command | Result | Requires |
 |---|---|---|
-| `pytest` (default = core) | **89 passed · 3 xfailed (strict) · 0 skipped** | numpy only |
+| `pytest` (default = core) | **112 passed · 2 xfailed (strict) · 0 skipped** | numpy only |
 | `pytest -m rust` | 4 passed | `sh scripts/build_rust.sh` |
 | `pytest -m jax` | 4 passed | `pip install ".[jax]"` |
 | `pytest -m verify` | 3 passed with a verifier binary; skips without | `BLUEBERRY_VERIFY_BIN` |
@@ -19,25 +19,37 @@ shipped `blueberry_circus/_vendor/`. `pip install .` works too: the wheel
 bundles the vendored certify layer, checked by installing into a fresh venv and
 importing and running from a neutral directory.
 
-The 3 xfails are strict (`xfail_strict`), and they cover the convergent 3-D
-hydrogen radial-density match to the QM 1s state, relativistic corrections, and
-stable hydrogen, which by the literature's own verdict never passes. None of
-them is silenced work.
+The 2 xfails are strict (`xfail_strict`), and cover the convergent 3-D hydrogen
+radial-density match and relativistic corrections. The permanent “stable
+hydrogen is unreachable” xfail was removed: a literature conclusion is not a
+locally executed acceptance test.
 
 ## Headline verified numbers
 
-**O1 (Puthoff 1987) measured vs CODATA:** Bohr radius rel-err **1.2e-9**, ground
-state **−13.605693 eV** (rel-err 1.0e-8), orbital frequency = Hartree/ħ
-(`tests/test_puthoff.py`). These are closed forms in SI evaluated against CODATA,
-i.e. the static target the SED power balance lands on. They are not dynamical
-measurements, and the dynamical run self-ionizes (O5). The companion
-`L/ħ = 1` check is an algebraic identity (`L = m·v(a₀)·a₀` reduces to ħ exactly),
-so it locks unit bookkeeping rather than predicting anything.
+**O1 (Puthoff 1987 circular approximation):** the implementation evaluates
+`P_abs` and `P_rad` separately and gates their relative residual below `1e-12`.
+Equality yields `mω₀r₀²=ħ`. Bohr radius and energy are still checked against
+CODATA, but neither is described as a nonlinear stability measurement.
 
 **O2 (Boyer 1975), the gate:** the SED ground-state integral reproduces
 ⟨x²⟩ = ħ/(2mω₀) with real SI electron constants to rel-err **4.99e-4**; the
 time-domain integrator reproduces the analytic single-mode variance to
 **2.2e-3**.
+
+**O5 (Nieuwenhuizen 2016):** a 96×96 transformed Gauss–Legendre evaluation of
+the nested improper integral gives `L_c = 0.5880841551156304`, versus
+`16/(5π√3) = 0.5880841551165783` (absolute residual `9.5e-13`). The per-orbit
+near-ionization drift is positive below `L_c`, negative above it, and the
+critical perihelion is `0.172921... a₀`.
+
+**Setterfield static hypothesis:** at `U=1` and `U=4`, mapped-band trajectories
+with identical phases satisfy `x_U(Ut)=x_1(t)`, `Uv_U(Ut)=v_1(t)`, equal
+mechanical energy, and equal `L/ħ` below `1e-9`. This certifies static dynamical
+inertness, not the empirical scaling proposal.
+
+**Legacy stress fixture:** its dimensionless damping is `13,367.7×` the
+physical Bohr value and sustained positive energy begins at `0.06956` orbit.
+It is retained only as an accelerated numerical stress test.
 
 **Cross-language enclosure:** the Rust `cdylib` backend is **bit-identical** to
 numpy on the SHO case (max|Δx| = 0.0) and agrees to ~7e-14 on the Kepler orbit;
@@ -83,8 +95,8 @@ bit-level audit that recomputes residuals from the covariance is deferred.
    vacuum-covariance residual / symplectic eigenvalue in outward-rounded
    interval arithmetic rather than re-deriving verdicts from recorded numbers).
 2. **PyPI publication.** This release is a GitHub source release only.
-3. **O3 convergence.** The CPU-day hydrogen radial-density ensembles (strict
-   xfail until genuinely reproduced).
+3. **O3 convergence.** The CPU-day physical-coupling hydrogen radial-density
+   ensembles (strict xfail until genuinely reproduced).
 
 ## Vendored mirror provenance
 

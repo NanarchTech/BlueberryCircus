@@ -258,12 +258,10 @@ def radial_l1_distance(centers, density) -> float:
 
 
 # --- O1: Puthoff power-balance ground state (Bohr-level analytic targets) -----
-# Puthoff (PRD 35, 3266, 1987) showed that, at the Bohr level, the SED dynamic
-# equilibrium between Larmor radiation and zero-point absorption reproduces the
-# quantum ground state: the Bohr radius, the -13.6 eV binding energy, and angular
-# momentum hbar. These are the analytic targets that balance lands on; the FULL
-# dynamical SED run self-ionizes (see watchdog / O5), so O1 is the static target,
-# not a claim that a stable orbit is reproduced dynamically.
+# Puthoff (PRD 35, 3266, 1987) evaluated a circular-orbit harmonic power
+# balance at the Bohr level. Its analytic targets are the Bohr radius, the
+# -13.6 eV binding energy, and angular momentum hbar. O1 is not a claim that a
+# stable nonlinear stochastic orbit has been reproduced dynamically.
 def bohr_radius(units: Units = SI, Z: float = 1.0) -> float:
     """ZPF-determined ground-state radius ``a0 = 4 pi eps0 hbar^2 / (m e^2) / Z``."""
     a0 = 4.0 * math.pi * units.eps0 * units.hbar**2 / (units.mass * units.charge**2)
@@ -285,21 +283,36 @@ def bohr_angular_momentum(units: Units = SI, Z: float = 1.0) -> float:
 
 
 def puthoff_power_balance(units: Units = SI, Z: float = 1.0) -> dict:
-    """The two quantities Puthoff (1987) equates at the ground-state orbit: the
-    Larmor power radiated by the circularly-accelerating electron, and the power it
-    absorbs from the ZPF (set by the spectral energy density ``rho`` at the orbital
-    frequency). At the Bohr radius the orbit carries ``L = hbar`` and
-    ``E = -13.6 eV``; the balance is what selects that radius. Returns diagnostics.
+    """Evaluate Puthoff's circular-orbit harmonic power-balance approximation.
+
+    This is the Bohr-level calculation in Puthoff (1987), not a nonlinear
+    hydrogen-stability result. At radius ``r0`` and circular frequency ``omega0``
+    it compares
+
+    ``P_abs = e^2 hbar omega0^3 / (6 pi eps0 m c^3)`` and
+    ``P_rad = e^2 r0^2 omega0^4 / (6 pi eps0 c^3)``.
+
+    Equality is equivalent to ``m omega0 r0^2 = hbar``. The legacy
+    ``larmor_power`` key is retained as an alias for ``radiated_power``.
     """
     a0 = bohr_radius(units, Z)
     coef = Z * units.k_e * units.charge**2
     omega0 = math.sqrt(coef / (units.mass * a0**3))          # orbital angular freq
-    accel = omega0**2 * a0                                    # centripetal accel
-    p_rad = units.charge**2 * accel**2 / (6.0 * math.pi * units.eps0 * units.c**3)
+    p_abs = (units.charge**2 * units.hbar * omega0**3 /
+             (6.0 * math.pi * units.eps0 * units.mass * units.c**3))
+    p_rad = (units.charge**2 * a0**2 * omega0**4 /
+             (6.0 * math.pi * units.eps0 * units.c**3))
+    action = units.mass * omega0 * a0**2
+    rel_residual = abs(p_abs - p_rad) / max(abs(p_abs), abs(p_rad), 1e-300)
     return {
         "a0": a0,
         "omega0": omega0,
+        "absorbed_power": p_abs,
+        "radiated_power": p_rad,
         "larmor_power": p_rad,
+        "relative_power_residual": rel_residual,
+        "action_m_omega_r2": action,
+        "action_over_hbar": action / units.hbar,
         "rho_zpf_at_omega0": float(rho(omega0, units)),
         "angular_momentum_over_hbar": bohr_angular_momentum(units, Z) / units.hbar,
         "energy_joule": hydrogen_ground_state_energy(units, Z),
