@@ -144,6 +144,50 @@ co-scaling is dynamically inert after time reparameterization. A genuinely
 time-dependent `U(t)` is a different, driven problem whose parameter work must
 be recorded explicitly.
 
+### 5.5 Full drift surface and hypothesis tournament
+
+Version 0.3.0 evaluates Nieuwenhuizen's complete finite-energy point-charge
+drift before changing the model. With `k=sqrt(-2E)`, `kappa=kL`, and
+`epsilon²=1-kappa²`, Equation (2.34) is
+
+    D(E,L) = beta² k⁸(2+epsilon²)[k f(kappa)-kappa]/(2 kappa⁶).
+
+The nested definition of `f(kappa)` is numerically nontrivial near a radial
+orbit. Equations (2.23)--(2.25) cancel all short-history terms through cubic
+order, so evaluating the unfactored numerator loses the signal at the
+perihelion. `tournament.py` performs this cancellation coefficient by
+coefficient, then uses perihelion-adapted Gauss--Legendre maps. This is why the
+same routine can recover both the circular result `f(1)=1/2` and the PR1 radial
+limit rather than splicing an empirical interpolation between them.
+
+The tournament ledger is
+
+    Delta E_mech = W_ZPF - E_rad - Delta E_Schott
+                   + W_external + W_internal + residual.
+
+This identity blocks three common category errors. Parametric work in a dynamic
+Setterfield profile cannot masquerade as passive vacuum stabilization;
+energy stored in the multipole surrogate cannot disappear; and a finite shell
+cannot attenuate radiation without applying the same reciprocal form factor to
+absorption.
+
+The stochastic layer samples the *quadratic perturbative response kernel* with
+finite random phases. It does not integrate a nonlinear physical hydrogen atom
+for the very long times used in the negative published simulations. Its purpose
+is narrower: reproduce confidence intervals from stored seeds, check the
+2,048-to-4,096-mode/timestep convergence rule, and refuse a classification when
+the response calculation is resolution-dependent. Full equations, parameter
+grids, classifications, and commands are in [`tournament.md`](tournament.md).
+
+The inverse-square source has an internal numerical inconsistency worth making
+explicit. Direct integration of the kernel printed in Nieuwenhuizen's Eqs.
+(3.19)--(3.27) gives `H_max approximately 7.327` near `mu=0.590`, hence the
+defining `d_c=-H_max² approximately -53.69`. The prose value `-35.8` follows
+from squaring only its quoted endpoint `H(0)=5.99`, even though the stated
+criterion is a maximum over the whole repulsive branch. BlueberryCircus records
+both values and uses the calculated maximum. This does not validate the added
+force; it only makes the paper's mathematical test reproducible.
+
 ## 6. The vacuum-covariance certificate
 
 Boyer's oracle (§4) pins one number, `⟨x²⟩`. The vacuum-covariance certificate

@@ -1,6 +1,6 @@
 # BlueberryCircus verification status
 
-v0.2.0. Verified on a macOS workstation (CPython 3.14.2; exact dependency and
+v0.3.0. Verified on a macOS workstation (CPython 3.14.2; exact dependency and
 tool versions are printed by the release gate) on 2026-08-13. Pass counts are
 environment-specific; reproduce locally before citing them.
 
@@ -8,7 +8,7 @@ environment-specific; reproduce locally before citing them.
 
 | Command | Result | Requires |
 |---|---|---|
-| `pytest` (default = core) | **112 passed · 2 xfailed (strict) · 0 skipped** | numpy only |
+| `pytest` (default = core) | **134 passed · 2 xfailed (strict) · 0 skipped** | numpy only |
 | `pytest -m rust` | 4 passed | `sh scripts/build_rust.sh` |
 | `pytest -m jax` | 4 passed | `pip install ".[jax]"` |
 | `pytest -m verify` | 3 passed with a verifier binary; skips without | `BLUEBERRY_VERIFY_BIN` |
@@ -50,6 +50,29 @@ inertness, not the empirical scaling proposal.
 **Legacy stress fixture:** its dimensionless damping is `13,367.7×` the
 physical Bohr value and sustained positive energy begins at `0.06956` orbit.
 It is retained only as an accelerated numerical stress test.
+
+## Hypothesis tournament (`tournament.py`)
+
+The baseline report evaluates Nieuwenhuizen's complete finite-energy
+point-charge surface over 18 preregistered `(E,L)` cells. It recovers the
+near-ionization sign change, agrees with the PR1 asymptote within one percent at
+the independently evaluated `E=-0.001` probe, and recovers the exact circular
+endpoint. The default stochastic
+gate executes 32 stored seeds at 2,048 and 4,096 modes, halving the nominal
+timestep and returning `NULL` when normalized drift changes by ten percent or
+more.
+
+All four zero-parameter arms recover the identical baseline cell. The driven
+Setterfield Hamiltonian records `partial H/partial t` as external work; the
+finite shell applies one reciprocal form factor to both powers; the
+inverse-square arm integrates the printed source kernel; and the
+Rodríguez-inspired multipole surrogate conserves its closed total Hamiltonian.
+None can emit `STABLE_GROUND_STATE`.
+
+The inverse-square audit is a new negative reproducibility result. Orders 48
+and 64 give `H_max≈7.327` near `mu≈0.590`, hence the defining
+`d_c=-H_max²≈-53.69`. The paper's prose `-35.8` squares only its quoted
+`H(0)=5.99`, despite stating an all-`mu` criterion. Reports retain both values.
 
 **Cross-language enclosure:** the Rust `cdylib` backend is **bit-identical** to
 numpy on the SHO case (max|Δx| = 0.0) and agrees to ~7e-14 on the Kepler orbit;

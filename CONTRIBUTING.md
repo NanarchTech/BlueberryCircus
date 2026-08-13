@@ -22,7 +22,7 @@ guarantee. This is a research prototype maintained alongside other work.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                      # core suite: must be 112 passed, 2 xfailed, 0 skipped
+pytest                      # core suite: must be 134 passed, 2 xfailed, 0 skipped
 sh scripts/build_rust.sh && pytest -m rust   # if your change touches the integrator
 pip install ".[jax]" && pytest -m jax        # if your change touches backends
 ```

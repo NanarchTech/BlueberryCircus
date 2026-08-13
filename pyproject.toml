@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "blueberry-circus"
-version = "0.2.0"
+version = "0.3.0"
 description = "BlueberryCircus: a classical stochastic-electrodynamics (SED) simulator with re-checkable PASS/FAIL/NULL certificates on every reported number."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -38,6 +38,9 @@ Homepage = "https://github.com/NanarchTech/BlueberryCircus"
 Repository = "https://github.com/NanarchTech/BlueberryCircus"
 Issues = "https://github.com/NanarchTech/BlueberryCircus/issues"
 Documentation = "https://github.com/NanarchTech/BlueberryCircus/tree/main/docs"
+
+[project.scripts]
+blueberry-tournament = "blueberry_circus.tournament_cli:main"
 
 # Auto-discovers blueberry_circus, .backends, ._vendor and ._vendor.nanarch_certify
 # (the shipped vendored mirror), so the wheel is self-contained.
